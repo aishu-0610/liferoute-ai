@@ -149,8 +149,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </ul>
               </div>
             </div>
-            <div className="mt-8 pt-8 border-t text-sm text-muted-foreground text-center">
-              © {new Date().getFullYear()} LifeRoute AI Command Center. Hackathon Project.
+            <div className="mt-8 pt-8 border-t space-y-2 text-center">
+              <p className="text-xs text-amber-600 dark:text-amber-500 font-medium">
+                ⚠ Hospital data and phone numbers are sample data for demo purposes only.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} LifeRoute AI Command Center. Hackathon Project.
+              </p>
             </div>
           </div>
         </footer>

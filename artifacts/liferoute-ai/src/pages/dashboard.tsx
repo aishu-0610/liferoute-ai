@@ -533,15 +533,20 @@ export default function Dashboard() {
 
       {/* ── Hospital Grid ──────────────────────────────────── */}
       <div>
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Activity className="h-5 w-5 text-primary" />
-          Hospital Grid
-          {!hospitalsLoading && hospitals && (
-            <Badge variant="secondary" className="ml-1 font-normal text-xs">
-              {hospitals.length} Results
-            </Badge>
-          )}
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Hospital Grid
+            {!hospitalsLoading && hospitals && (
+              <Badge variant="secondary" className="ml-1 font-normal text-xs">
+                {hospitals.length} Results
+              </Badge>
+            )}
+          </h2>
+          <p className="text-xs text-amber-600 dark:text-amber-500 font-medium shrink-0">
+            ⚠ Sample data for demo purposes only
+          </p>
+        </div>
 
         {hospitalsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

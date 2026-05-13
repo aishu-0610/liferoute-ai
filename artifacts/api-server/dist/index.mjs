@@ -32497,7 +32497,7 @@ var hospitals = [
     ventilatorsAvailable: 3,
     bloodUnitsAvailable: "A+, O+, B+",
     specialties: ["Trauma Care", "Cardiology", "Emergency Ward"],
-    contactNumber: "+91 98765 43210",
+    contactNumber: "+91 90000 00001",
     lastUpdated: now()
   },
   {
@@ -32513,7 +32513,7 @@ var hospitals = [
     ventilatorsAvailable: 0,
     bloodUnitsAvailable: "O+, AB+",
     specialties: ["Emergency Ward", "Neurology"],
-    contactNumber: "+91 98765 43211",
+    contactNumber: "+91 90000 00002",
     lastUpdated: now()
   },
   {
@@ -32529,7 +32529,7 @@ var hospitals = [
     ventilatorsAvailable: 0,
     bloodUnitsAvailable: "Limited",
     specialties: ["Kidney Care", "Liver Care", "Operation Theatre"],
-    contactNumber: "+91 98765 43212",
+    contactNumber: "+91 90000 00003",
     lastUpdated: now()
   },
   {
@@ -32545,7 +32545,7 @@ var hospitals = [
     ventilatorsAvailable: 2,
     bloodUnitsAvailable: "A-, B+, O-",
     specialties: ["Trauma Care", "ICU", "Blood Bank"],
-    contactNumber: "+91 98765 43213",
+    contactNumber: "+91 90000 00004",
     lastUpdated: now()
   },
   {
@@ -32561,7 +32561,7 @@ var hospitals = [
     ventilatorsAvailable: 1,
     bloodUnitsAvailable: "B+, O+",
     specialties: ["Emergency Ward", "Cardiology", "Ventilator"],
-    contactNumber: "+91 98765 43214",
+    contactNumber: "+91 90000 00005",
     lastUpdated: now()
   },
   // ── Chennai, Tamil Nadu ──────────────────────────────────────────
@@ -32578,7 +32578,7 @@ var hospitals = [
     ventilatorsAvailable: 7,
     bloodUnitsAvailable: "A+, A-, B+, B-, O+, O-, AB+",
     specialties: ["Cardiology", "Neurology", "Trauma Care", "Operation Theatre", "ICU"],
-    contactNumber: "+91 44 2829 0200",
+    contactNumber: "+91 90000 00006",
     lastUpdated: now()
   },
   {
@@ -32594,7 +32594,7 @@ var hospitals = [
     ventilatorsAvailable: 4,
     bloodUnitsAvailable: "O+, A+, B+",
     specialties: ["Cardiology", "Trauma Care", "Emergency Ward", "Blood Bank"],
-    contactNumber: "+91 44 4289 2222",
+    contactNumber: "+91 90000 00007",
     lastUpdated: now()
   },
   {
@@ -32610,7 +32610,7 @@ var hospitals = [
     ventilatorsAvailable: 1,
     bloodUnitsAvailable: "AB-, O+",
     specialties: ["Orthopedics", "Neurology", "Emergency Ward"],
-    contactNumber: "+91 44 4200 2288",
+    contactNumber: "+91 90000 00008",
     lastUpdated: now()
   },
   {
@@ -32626,7 +32626,7 @@ var hospitals = [
     ventilatorsAvailable: 3,
     bloodUnitsAvailable: "A+, O+",
     specialties: ["Kidney Care", "Liver Care", "Operation Theatre"],
-    contactNumber: "+91 44 2434 6555",
+    contactNumber: "+91 90000 00009",
     lastUpdated: now()
   },
   {
@@ -32642,7 +32642,7 @@ var hospitals = [
     ventilatorsAvailable: 0,
     bloodUnitsAvailable: "Limited",
     specialties: ["Emergency Ward", "Trauma Care"],
-    contactNumber: "+91 44 7100 8000",
+    contactNumber: "+91 90000 00010",
     lastUpdated: now()
   },
   // ── Bengaluru, Karnataka ─────────────────────────────────────────
@@ -32659,7 +32659,7 @@ var hospitals = [
     ventilatorsAvailable: 6,
     bloodUnitsAvailable: "A+, O+, B+, AB+",
     specialties: ["Cardiology", "Neurology", "Trauma Care", "ICU", "Operation Theatre"],
-    contactNumber: "+91 80 2502 4444",
+    contactNumber: "+91 90000 00011",
     lastUpdated: now()
   },
   {
@@ -32675,7 +32675,7 @@ var hospitals = [
     ventilatorsAvailable: 3,
     bloodUnitsAvailable: "O+, A-, B+",
     specialties: ["Emergency Ward", "Blood Bank", "Cardiology", "ICU"],
-    contactNumber: "+91 80 6741 1111",
+    contactNumber: "+91 90000 00012",
     lastUpdated: now()
   },
   {
@@ -32691,7 +32691,7 @@ var hospitals = [
     ventilatorsAvailable: 1,
     bloodUnitsAvailable: "B+, O+",
     specialties: ["Cardiology", "Trauma Care", "Emergency Ward"],
-    contactNumber: "+91 80 7122 2222",
+    contactNumber: "+91 90000 00013",
     lastUpdated: now()
   },
   {
@@ -32707,7 +32707,7 @@ var hospitals = [
     ventilatorsAvailable: 2,
     bloodUnitsAvailable: "A+, B-, O+, AB-",
     specialties: ["Kidney Care", "Liver Care", "Neurology", "Operation Theatre"],
-    contactNumber: "+91 80 6621 4444",
+    contactNumber: "+91 90000 00014",
     lastUpdated: now()
   },
   {
@@ -32723,7 +32723,7 @@ var hospitals = [
     ventilatorsAvailable: 0,
     bloodUnitsAvailable: "None",
     specialties: ["Trauma Care", "Emergency Ward"],
-    contactNumber: "+91 80 4969 4969",
+    contactNumber: "+91 90000 00015",
     lastUpdated: now()
   },
   // ── Mumbai, Maharashtra ──────────────────────────────────────────
@@ -32740,7 +32740,7 @@ var hospitals = [
     ventilatorsAvailable: 8,
     bloodUnitsAvailable: "A+, A-, B+, B-, O+, O-, AB+, AB-",
     specialties: ["Cardiology", "Neurology", "Trauma Care", "ICU", "Operation Theatre"],
-    contactNumber: "+91 22 4269 6969",
+    contactNumber: "+91 90000 00016",
     lastUpdated: now()
   },
   {
@@ -32756,7 +32756,7 @@ var hospitals = [
     ventilatorsAvailable: 5,
     bloodUnitsAvailable: "O+, A+, AB+",
     specialties: ["Emergency Ward", "Trauma Care", "Blood Bank", "Cardiology"],
-    contactNumber: "+91 22 2675 1000",
+    contactNumber: "+91 90000 00017",
     lastUpdated: now()
   },
   {
@@ -32772,7 +32772,7 @@ var hospitals = [
     ventilatorsAvailable: 1,
     bloodUnitsAvailable: "B+, O-",
     specialties: ["Kidney Care", "Liver Care", "Emergency Ward", "Neurology"],
-    contactNumber: "+91 22 2444 9199",
+    contactNumber: "+91 90000 00018",
     lastUpdated: now()
   },
   {
@@ -32788,7 +32788,7 @@ var hospitals = [
     ventilatorsAvailable: 3,
     bloodUnitsAvailable: "A+, O+, B+",
     specialties: ["Operation Theatre", "Cardiology", "ICU", "Trauma Care"],
-    contactNumber: "+91 22 2576 3599",
+    contactNumber: "+91 90000 00019",
     lastUpdated: now()
   },
   {
@@ -32804,7 +32804,7 @@ var hospitals = [
     ventilatorsAvailable: 0,
     bloodUnitsAvailable: "O+, AB+",
     specialties: ["Emergency Ward", "Trauma Care"],
-    contactNumber: "+91 22 2742 5000",
+    contactNumber: "+91 90000 00020",
     lastUpdated: now()
   },
   // ── Delhi ────────────────────────────────────────────────────────
@@ -32821,7 +32821,7 @@ var hospitals = [
     ventilatorsAvailable: 3,
     bloodUnitsAvailable: "A+, O+, B+, AB+",
     specialties: ["Cardiology", "Neurology", "Trauma Care", "Operation Theatre", "ICU"],
-    contactNumber: "+91 11 2658 8500",
+    contactNumber: "+91 90000 00021",
     lastUpdated: now()
   },
   {
@@ -32837,7 +32837,7 @@ var hospitals = [
     ventilatorsAvailable: 5,
     bloodUnitsAvailable: "O+, A-, B+",
     specialties: ["Emergency Ward", "Trauma Care", "Cardiology", "Blood Bank"],
-    contactNumber: "+91 11 4055 4055",
+    contactNumber: "+91 90000 00022",
     lastUpdated: now()
   },
   {
@@ -32853,7 +32853,7 @@ var hospitals = [
     ventilatorsAvailable: 3,
     bloodUnitsAvailable: "A+, B+, AB-",
     specialties: ["Kidney Care", "Liver Care", "Neurology", "ICU"],
-    contactNumber: "+91 11 4900 0900",
+    contactNumber: "+91 90000 00023",
     lastUpdated: now()
   },
   {
@@ -32869,7 +32869,7 @@ var hospitals = [
     ventilatorsAvailable: 4,
     bloodUnitsAvailable: "A+, O+, B-, AB+",
     specialties: ["Cardiology", "Trauma Care", "Operation Theatre", "Emergency Ward"],
-    contactNumber: "+91 11 4713 5000",
+    contactNumber: "+91 90000 00024",
     lastUpdated: now()
   },
   {
@@ -32885,7 +32885,7 @@ var hospitals = [
     ventilatorsAvailable: 0,
     bloodUnitsAvailable: "None",
     specialties: ["Emergency Ward", "Trauma Care"],
-    contactNumber: "+91 11 2308 5252",
+    contactNumber: "+91 90000 00025",
     lastUpdated: now()
   }
 ];
