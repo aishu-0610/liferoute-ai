@@ -1,12 +1,10 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import {
-  useGetHospitals,
-  useGetHospitalStats,
   useGetEmergencyContacts,
-  useGetCities,
 } from "@workspace/api-client-react";
 import type { Hospital } from "@workspace/api-client-react";
+import { useHospitalStore } from "@/context/hospital-store";
 import {
   Search, Activity, Bed, Wind, Droplets, MapPin,
   Phone, Clock, Star, AlertTriangle, CheckCircle2,
@@ -32,6 +30,30 @@ const CITY_LIST = [
 /** Strip **bold** markdown so names render cleanly in JSX */
 function stripMd(text: string): string {
   return text.replace(/\*\*(.*?)\*\*/g, "$1");
+}
+
+function facilityMatches(hospital: Hospital, facility: string): boolean {
+  if (!facility || facility === "all") return true;
+  const fac = facility.toLowerCase();
+  if (fac === "general beds") return hospital.bedsAvailable > 0;
+  if (fac === "icu") {
+    return (
+      hospital.icuAvailable > 0 ||
+      hospital.specialties.some((s) => s.toLowerCase().includes("icu"))
+    );
+  }
+  if (fac === "ventilator" || fac === "ventilators") {
+    return (
+      hospital.ventilatorsAvailable > 0 ||
+      hospital.specialties.some((s) => s.toLowerCase().includes("vent"))
+    );
+  }
+  if (fac === "blood bank") {
+    const blood = (hospital.bloodUnitsAvailable || "").trim().toLowerCase();
+    const hasBlood = blood.length > 0 && blood !== "none" && blood !== "n/a" && blood !== "-";
+    return hasBlood || hospital.specialties.some((s) => s.toLowerCase().includes("blood bank"));
+  }
+  return hospital.specialties.some((s) => s.toLowerCase().includes(fac));
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -72,31 +94,61 @@ export default function Dashboard() {
     emergencyLevel: "all",
   });
 
-  const { data: cities } = useGetCities();
+  const { allHospitals, isLoading } = useHospitalStore();
   const cityParam = selectedCity || undefined;
 
-  const { data: stats, isLoading: statsLoading } = useGetHospitalStats(
-    cityParam ? { city: cityParam } : undefined
-  );
+  const citiesWithData = useMemo(() => {
+    const citySet = new Set(allHospitals.map((h) => h.city));
+    return CITY_LIST.map((c) => ({ name: c, hasData: citySet.has(c) }));
+  }, [allHospitals]);
 
-  const queryParams = useMemo(() => {
-    const params: Record<string, string> = {};
-    if (cityParam) params.city = cityParam;
-    if (searchTerm) params.search = searchTerm;
-    if (filters.area !== "all") params.area = filters.area;
-    if (filters.facility !== "all") params.facility = filters.facility;
-    if (filters.status !== "all") params.status = filters.status;
-    return params;
-  }, [cityParam, searchTerm, filters]);
+  const stats = useMemo(() => {
+    const scope = cityParam
+      ? allHospitals.filter((h) => h.city.toLowerCase() === cityParam.toLowerCase())
+      : allHospitals;
+    return {
+      totalHospitals: scope.length,
+      availableHospitals: scope.filter((h) => h.status === "Available").length,
+      limitedHospitals: scope.filter((h) => h.status === "Limited").length,
+      fullHospitals: scope.filter((h) => h.status === "Full").length,
+      totalIcuBeds: scope.reduce((sum, h) => sum + h.icuAvailable, 0),
+      totalVentilators: scope.reduce((sum, h) => sum + h.ventilatorsAvailable, 0),
+      totalBeds: scope.reduce((sum, h) => sum + h.bedsAvailable, 0),
+    };
+  }, [allHospitals, cityParam]);
 
-  const { data: hospitals, isLoading: hospitalsLoading } = useGetHospitals(queryParams);
+  const hospitals = useMemo(() => {
+    let filtered = allHospitals;
+    if (cityParam) {
+      filtered = filtered.filter(
+        (h) => h.city.toLowerCase() === cityParam.toLowerCase()
+      );
+    }
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (h) => h.name.toLowerCase().includes(q) || h.area.toLowerCase().includes(q)
+      );
+    }
+    if (filters.area !== "all") {
+      filtered = filtered.filter((h) =>
+        h.area.toLowerCase().includes(filters.area.toLowerCase())
+      );
+    }
+    if (filters.facility !== "all") {
+      filtered = filtered.filter((h) => facilityMatches(h, filters.facility));
+    }
+    if (filters.status !== "all") {
+      filtered = filtered.filter((h) => h.status === filters.status);
+    }
+    return filtered;
+  }, [allHospitals, cityParam, searchTerm, filters]);
 
   const { data: emergencyContacts } = useGetEmergencyContacts(
     cityParam ? { city: cityParam } : undefined
   );
 
   const areas = useMemo(() => {
-    if (!hospitals) return [];
     return Array.from(new Set(hospitals.map((h) => h.area))).sort();
   }, [hospitals]);
 
@@ -188,7 +240,7 @@ export default function Dashboard() {
     return { found: true, hospital: best.hospital, score: best.score, reasons: best.reasons, reason };
   }, [hospitals, selectedCity, filters]);
 
-  const cityHasData = cities?.find(
+  const cityHasData = citiesWithData.find(
     (c) => c.name.toLowerCase() === (selectedCity || "").toLowerCase()
   )?.hasData;
   const cityNoData = selectedCity && cityHasData === false;
@@ -244,7 +296,7 @@ export default function Dashboard() {
               <SelectContent>
                 <SelectItem value="none">All Cities</SelectItem>
                 {CITY_LIST.map((c) => {
-                  const info = cities?.find((ci) => ci.name === c);
+                  const info = citiesWithData.find((ci) => ci.name === c);
                   return (
                     <SelectItem key={c} value={c}>
                       <span className="flex items-center gap-2">
@@ -309,7 +361,7 @@ export default function Dashboard() {
                 <div>
                   <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
                   <p className="text-[10px] text-muted-foreground/70 mt-0.5">{stat.sub}</p>
-                  {statsLoading ? (
+                  {isLoading ? (
                     <Skeleton className="h-8 w-14 mt-2" />
                   ) : (
                     <p className="text-3xl font-bold mt-1">{stat.value ?? 0}</p>
@@ -365,7 +417,7 @@ export default function Dashboard() {
                 </p>
               </div>
             </div>
-          ) : hospitalsLoading ? (
+          ) : isLoading ? (
             <div className="flex gap-4">
               <Skeleton className="h-20 flex-1" />
               <Skeleton className="h-20 w-52" />
@@ -537,7 +589,7 @@ export default function Dashboard() {
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             Hospital Grid
-            {!hospitalsLoading && hospitals && (
+            {!isLoading && hospitals && (
               <Badge variant="secondary" className="ml-1 font-normal text-xs">
                 {hospitals.length} Results
               </Badge>
@@ -548,7 +600,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {hospitalsLoading ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i} className="overflow-hidden">

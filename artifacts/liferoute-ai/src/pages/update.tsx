@@ -1,21 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearch, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import {
-  useGetHospitals,
-  useGetHospital,
-  useUpdateHospital,
-  useAddHospital,
-  getGetHospitalsQueryKey,
-  getGetHospitalQueryKey,
-  getGetHospitalStatsQueryKey,
-} from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Activity, Save, AlertCircle, Plus, ChevronDown } from "lucide-react";
+import { Activity, Save, AlertCircle, Plus, RotateCcw } from "lucide-react";
 import { useCity } from "@/context/city-context";
+import { useHospitalStore } from "@/context/hospital-store";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -93,25 +84,23 @@ function UpdateTab() {
 
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { selectedCity } = useCity();
+  const { allHospitals, isLoading, updateHospital } = useHospitalStore();
 
   const [filterCity, setFilterCity] = useState(initialCity || selectedCity || "");
   const [selectedId, setSelectedId] = useState<string>(initialHospitalId || "");
 
-  const cityParam = filterCity || undefined;
-  const { data: hospitals, isLoading: loadingHospitals } = useGetHospitals(
-    cityParam ? { city: cityParam } : undefined
-  );
+  const hospitals = useMemo(() => {
+    if (!filterCity) return allHospitals;
+    return allHospitals.filter(
+      (h) => h.city.toLowerCase() === filterCity.toLowerCase()
+    );
+  }, [allHospitals, filterCity]);
 
-  const { data: hospital, isLoading: loadingHospital } = useGetHospital(selectedId, {
-    query: {
-      enabled: !!selectedId,
-      queryKey: getGetHospitalQueryKey(selectedId),
-    },
-  });
-
-  const updateMutation = useUpdateHospital();
+  const hospital = useMemo(() => {
+    if (!selectedId) return null;
+    return allHospitals.find((h) => h.id === selectedId) || null;
+  }, [allHospitals, selectedId]);
 
   const form = useForm<UpdateFormValues>({
     resolver: zodResolver(updateSchema),
@@ -132,7 +121,7 @@ function UpdateTab() {
     if (hospital) {
       form.reset({
         hospitalId: hospital.id,
-        status: hospital.status as any,
+        status: hospital.status as "Available" | "Limited" | "Full",
         emergencyLevel: (hospital.emergencyLevel as any) || null,
         bedsAvailable: hospital.bedsAvailable,
         icuAvailable: hospital.icuAvailable,
@@ -159,23 +148,15 @@ function UpdateTab() {
   const onSubmit = (values: UpdateFormValues) => {
     if (!values.hospitalId) return;
     const { hospitalId, ...updateData } = values;
-    updateMutation.mutate(
-      { id: hospitalId, data: { ...updateData, bloodUnitsAvailable: updateData.bloodUnitsAvailable || null } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetHospitalsQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetHospitalStatsQueryKey() });
-          if (hospitalId) {
-            queryClient.invalidateQueries({ queryKey: getGetHospitalQueryKey(hospitalId) });
-          }
-          toast({ title: "Update Successful", description: "Hospital availability has been broadcast across the network." });
-          setLocation("/dashboard");
-        },
-        onError: () => {
-          toast({ title: "Update Failed", description: "There was an error updating the hospital status.", variant: "destructive" });
-        },
-      }
-    );
+    updateHospital(hospitalId, {
+      ...updateData,
+      bloodUnitsAvailable: updateData.bloodUnitsAvailable || null,
+    });
+    toast({
+      title: "Update Successful",
+      description: "Hospital availability has been saved and will persist in this browser.",
+    });
+    setLocation("/dashboard");
   };
 
   return (
@@ -219,23 +200,23 @@ function UpdateTab() {
                 <FormItem>
                   <FormLabel>Select Facility</FormLabel>
                   <Select
-                    disabled={loadingHospitals}
+                    disabled={isLoading}
                     value={field.value}
                     onValueChange={(val) => { field.onChange(val); setSelectedId(val); }}
                   >
                     <FormControl>
                       <SelectTrigger className="bg-background">
-                        <SelectValue placeholder={loadingHospitals ? "Loading..." : "Select a hospital to update"} />
+                        <SelectValue placeholder={isLoading ? "Loading..." : "Select a hospital to update"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {hospitals?.map((h) => (
+                      {hospitals.map((h) => (
                         <SelectItem key={h.id} value={h.id}>
                           {h.name} — {h.area}
                           {!filterCity && ` (${h.city})`}
                         </SelectItem>
                       ))}
-                      {hospitals?.length === 0 && (
+                      {hospitals.length === 0 && (
                         <SelectItem value="none" disabled>No hospitals for selected city</SelectItem>
                       )}
                     </SelectContent>
@@ -393,10 +374,8 @@ function UpdateTab() {
               <AlertCircle className="h-4 w-4 mr-2" />
               Double-check values before broadcasting.
             </p>
-            <Button type="submit" size="lg" disabled={!selectedId || updateMutation.isPending}>
-              {updateMutation.isPending ? "Broadcasting..." : (
-                <><Save className="mr-2 h-4 w-4" /> Broadcast Update</>
-              )}
+            <Button type="submit" size="lg" disabled={!selectedId}>
+              <Save className="mr-2 h-4 w-4" /> Broadcast Update
             </Button>
           </CardFooter>
         </form>
@@ -408,9 +387,8 @@ function UpdateTab() {
 // ── Add Hospital Tab ────────────────────────────────────────────────
 function AddHospitalTab() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const addMutation = useAddHospital();
+  const { addHospital } = useHospitalStore();
 
   const form = useForm<AddFormValues>({
     resolver: zodResolver(addSchema),
@@ -446,36 +424,27 @@ function AddHospitalTab() {
       return;
     }
 
-    addMutation.mutate(
-      {
-        data: {
-          name: values.name,
-          city,
-          state: values.state,
-          area: values.area,
-          status: values.status,
-          emergencyLevel: values.emergencyLevel,
-          bedsAvailable: values.bedsAvailable,
-          icuAvailable: values.icuAvailable,
-          ventilatorsAvailable: values.ventilatorsAvailable,
-          bloodUnitsAvailable: values.bloodUnitsAvailable || null,
-          specialties: values.specialties,
-          contactNumber: values.contactNumber,
-        },
-      },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetHospitalsQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetHospitalStatsQueryKey() });
-          toast({ title: "Hospital Added", description: `${values.name} has been added to the ${city} dashboard.` });
-          form.reset();
-          setLocation("/dashboard");
-        },
-        onError: () => {
-          toast({ title: "Failed to Add Hospital", variant: "destructive" });
-        },
-      }
-    );
+    addHospital({
+      name: values.name,
+      city,
+      state: values.state,
+      area: values.area,
+      status: values.status,
+      emergencyLevel: values.emergencyLevel,
+      bedsAvailable: values.bedsAvailable,
+      icuAvailable: values.icuAvailable,
+      ventilatorsAvailable: values.ventilatorsAvailable,
+      bloodUnitsAvailable: values.bloodUnitsAvailable || null,
+      specialties: values.specialties,
+      contactNumber: values.contactNumber,
+    });
+
+    toast({
+      title: "Hospital Added",
+      description: `${values.name} has been added to the ${city} dashboard and saved locally.`,
+    });
+    form.reset();
+    setLocation("/dashboard");
   };
 
   return (
@@ -708,10 +677,8 @@ function AddHospitalTab() {
           </CardContent>
 
           <CardFooter className="border-t bg-muted/10 p-6 flex justify-end gap-3">
-            <Button type="submit" size="lg" variant="default" className="bg-green-600 hover:bg-green-700" disabled={addMutation.isPending}>
-              {addMutation.isPending ? "Adding..." : (
-                <><Plus className="mr-2 h-4 w-4" /> Add Hospital</>
-              )}
+            <Button type="submit" size="lg" variant="default" className="bg-green-600 hover:bg-green-700">
+              <Plus className="mr-2 h-4 w-4" /> Add Hospital
             </Button>
           </CardFooter>
         </form>
@@ -725,6 +692,16 @@ export default function UpdatePanel() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const defaultTab = params.has("add") ? "add" : "update";
+  const { toast } = useToast();
+  const { resetToDefaults } = useHospitalStore();
+
+  const handleReset = async () => {
+    await resetToDefaults();
+    toast({
+      title: "Demo Data Restored",
+      description: "All hospitals have been reset to the original 25 sample hospitals.",
+    });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -745,6 +722,22 @@ export default function UpdatePanel() {
           <AddHospitalTab />
         </TabsContent>
       </Tabs>
+
+      {/* ── Storage Note + Reset ──────────────────────────────── */}
+      <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-dashed bg-muted/30">
+        <p className="text-sm text-muted-foreground">
+          Added hospitals are saved locally in this browser for demo purposes.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+          onClick={handleReset}
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset Demo Data
+        </Button>
+      </div>
     </div>
   );
 }

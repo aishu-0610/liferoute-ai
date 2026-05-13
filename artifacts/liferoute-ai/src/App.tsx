@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Layout } from "@/components/layout";
 import { CityProvider } from "@/context/city-context";
+import { HospitalStoreProvider } from "@/context/hospital-store";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
@@ -27,11 +28,13 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <CityProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Layout>
-              <Router />
-            </Layout>
-          </WouterRouter>
+          <HospitalStoreProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <Layout>
+                <Router />
+              </Layout>
+            </WouterRouter>
+          </HospitalStoreProvider>
         </CityProvider>
         <Toaster />
       </TooltipProvider>
