@@ -179,12 +179,10 @@ export default function Dashboard() {
 
     const facilityText = selectedFacility ? ` with ${selectedFacility} support` : "";
     const emergencyText =
-      isCritical
-        ? "critical emergency"
-        : filters.emergencyLevel !== "all"
-          ? `${filters.emergencyLevel.toLowerCase()} emergency`
-          : "emergency routing";
-    const topReasons = best.reasons.slice(0, 3).join(", ");
+      filters.emergencyLevel !== "all"
+        ? `${filters.emergencyLevel.toLowerCase()} emergency`
+        : "emergency routing";
+    const topReasons = best.reasons.slice(0, 4).join(", ");
     const reason = `For ${emergencyText}${facilityText} in ${selectedCity}, ${best.hospital.name} is recommended because it has ${topReasons}.`;
 
     return { found: true, hospital: best.hospital, score: best.score, reasons: best.reasons, reason };
@@ -343,7 +341,14 @@ export default function Dashboard() {
               </div>
             </div>
             {filters.emergencyLevel !== "all" && (
-              <EmergencyLevelBadge level={filters.emergencyLevel} />
+              <Badge variant="secondary" className={({
+                Low: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+                Medium: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+                High: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
+                Critical: "bg-red-500/15 text-red-700 dark:text-red-400 font-bold animate-pulse",
+              } as Record<string, string>)[filters.emergencyLevel] || ""}>
+                Emergency Level: {filters.emergencyLevel}
+              </Badge>
             )}
           </div>
         </CardHeader>
@@ -395,10 +400,12 @@ export default function Dashboard() {
                       {aiRecommendation.hospital.area}, {aiRecommendation.hospital.city}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <StatusBadge status={aiRecommendation.hospital.status} />
                     {aiRecommendation.hospital.emergencyLevel && (
-                      <EmergencyLevelBadge level={aiRecommendation.hospital.emergencyLevel} />
+                      <Badge variant="outline" className="text-[10px] py-0 h-5 font-normal text-muted-foreground border-muted-foreground/30">
+                        Hospital Load: {aiRecommendation.hospital.emergencyLevel}
+                      </Badge>
                     )}
                   </div>
                   <div className="grid grid-cols-3 gap-1 bg-muted/40 rounded-md p-2 text-center">
