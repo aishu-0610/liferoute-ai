@@ -1,45 +1,130 @@
 # LifeRoute AI
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+**Find the right hospital faster when every minute matters.**
 
-## Run & Operate
+LifeRoute AI is a multi-city emergency hospital availability dashboard that helps patients, families, ambulance drivers, and emergency coordinators quickly find hospitals with available beds, ICU support, ventilators, blood units, and specialty care.
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+---
 
-## Stack
+## Problem Statement
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+During medical emergencies, people often lose critical time calling multiple hospitals to check whether beds, ICU support, ventilators, blood units, or specialists are available. This delay can affect treatment outcomes, especially in trauma, ICU, and critical care situations.
 
-## Where things live
+LifeRoute AI solves this problem by bringing hospital availability information into one centralized city-based dashboard.
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+---
 
-## Architecture decisions
+## Solution
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+LifeRoute AI allows users to select a city and instantly view hospitals in that city along with emergency resource availability. Users can filter hospitals by area, facility, status, and emergency level. The platform also includes an AI-style routing recommendation that suggests the most suitable hospital based on availability and emergency needs.
 
-## Product
+---
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+## Key Features
 
-## User preferences
+- Multi-city hospital availability dashboard
+- City-based hospital search
+- Area, facility, status, and emergency level filters
+- AI-style hospital recommendation engine
+- Emergency contacts based on selected city/state
+- Hospital update panel
+- Add new hospital option
+- Dark mode support
+- Responsive design for desktop and mobile
+- Local data persistence for demo updates
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+---
 
-## Gotchas
+## Supported Sample Cities
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+The MVP includes sample data for cities such as:
 
-## Pointers
+- Madurai
+- Chennai
+- Bengaluru
+- Mumbai
+- Delhi
+- Pune
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+Unsupported cities show a friendly no-data message and can be extended by adding hospitals through the update panel.
+
+---
+
+## Target Users
+
+- Patients and families
+- Ambulance drivers
+- Emergency coordinators
+- Hospital staff
+- Healthcare administrators
+
+---
+
+## How It Works
+
+1. User selects or enters a city.
+2. The dashboard displays hospitals available in that city.
+3. User filters by area, facility, status, or emergency level.
+4. The AI routing engine recommends the best hospital based on available resources.
+5. Hospital staff can update hospital availability or add new hospitals.
+6. Emergency contacts update based on the selected city/state.
+
+---
+
+## AI Recommendation Logic
+
+The recommendation engine uses rule-based scoring for the MVP. It considers:
+
+- Selected city
+- Required facility
+- Emergency level
+- Hospital status
+- Available beds
+- ICU beds
+- Ventilator availability
+- Specialty match
+
+For critical emergencies, the system prioritizes hospitals with ICU beds, ventilators, available beds, and non-full status.
+
+---
+
+## Tech Stack
+
+- React
+- TypeScript
+- Tailwind CSS
+- Node.js
+- Express
+- Replit
+
+---
+
+## Practical Impact
+
+LifeRoute AI can help reduce emergency decision time by allowing users to quickly compare hospital availability in one place. It is designed as a practical student-buildable solution that can be expanded with verified hospital data, GPS-based routing, and real-time integrations.
+
+---
+
+## Future Scope
+
+- GPS-based nearest hospital suggestions
+- Verified hospital staff login
+- Ambulance driver mode
+- Blood bank integration
+- WhatsApp/SMS emergency alerts
+- Real-time hospital data verification
+- Government health dashboard
+- Multi-language support
+- Mobile app version
+
+---
+
+## Hackathon
+
+Built for **BluePrint 2026** under the **Healthcare** domain.
+
+---
+
+## Team
+
+Add your team member names here.
