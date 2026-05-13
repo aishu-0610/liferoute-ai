@@ -3,14 +3,15 @@ import { Link } from "wouter";
 import {
   useGetHospitals,
   useGetHospitalStats,
-  useGetRecommendation,
   useGetEmergencyContacts,
   useGetCities,
 } from "@workspace/api-client-react";
+import type { Hospital } from "@workspace/api-client-react";
 import {
   Search, Activity, Bed, Wind, Droplets, MapPin,
   Phone, Clock, Star, AlertTriangle, CheckCircle2,
   Building2, PhoneCall, Flame, ShieldAlert, HeartPulse,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
@@ -90,17 +91,6 @@ export default function Dashboard() {
 
   const { data: hospitals, isLoading: hospitalsLoading } = useGetHospitals(queryParams);
 
-  const recParams = useMemo(() => {
-    const params: Record<string, string> = {};
-    if (cityParam) params.city = cityParam;
-    if (filters.area !== "all") params.area = filters.area;
-    if (filters.facility !== "all") params.facility = filters.facility;
-    if (filters.emergencyLevel !== "all") params.emergencyLevel = filters.emergencyLevel;
-    return params;
-  }, [cityParam, filters.area, filters.facility, filters.emergencyLevel]);
-
-  const { data: recommendation, isLoading: recLoading } = useGetRecommendation(recParams);
-
   const { data: emergencyContacts } = useGetEmergencyContacts(
     cityParam ? { city: cityParam } : undefined
   );
@@ -109,6 +99,96 @@ export default function Dashboard() {
     if (!hospitals) return [];
     return Array.from(new Set(hospitals.map((h) => h.area))).sort();
   }, [hospitals]);
+
+  type AiResult =
+    | { found: false }
+    | { found: true; hospital: Hospital; score: number; reasons: string[]; reason: string };
+
+  const aiRecommendation = useMemo((): AiResult | null => {
+    if (!selectedCity) return null;
+    if (!hospitals || hospitals.length === 0) return { found: false };
+
+    const isCritical = filters.emergencyLevel === "Critical";
+    const selectedFacility = filters.facility !== "all" ? filters.facility : null;
+
+    const hasAvailableOrLimited = hospitals.some(
+      (h) => h.status === "Available" || h.status === "Limited",
+    );
+    const pool = hasAvailableOrLimited
+      ? hospitals.filter((h) => h.status !== "Full")
+      : hospitals;
+
+    if (pool.length === 0) return { found: false };
+
+    const scored = pool.map((h) => {
+      let score = 0;
+      const reasons: string[] = [];
+
+      if (h.status === "Available") { score += 40; reasons.push("available status"); }
+      else if (h.status === "Limited") { score += 20; reasons.push("limited capacity"); }
+      else if (h.status === "Full") { score -= 100; }
+
+      const bedBonus = Math.min(h.bedsAvailable, 30);
+      score += bedBonus;
+      if (h.bedsAvailable > 0) reasons.push(`${h.bedsAvailable} beds available`);
+
+      score += h.icuAvailable * 5;
+      if (h.icuAvailable > 0) reasons.push(`${h.icuAvailable} ICU beds`);
+
+      score += h.ventilatorsAvailable * 7;
+      if (h.ventilatorsAvailable > 0) reasons.push(`${h.ventilatorsAvailable} ventilators`);
+
+      if (selectedFacility) {
+        if (selectedFacility === "ICU") {
+          if (h.icuAvailable > 0) { score += 30; reasons.push("ICU beds available"); }
+        } else if (selectedFacility === "Ventilator") {
+          if (h.ventilatorsAvailable > 0) { score += 30; reasons.push("ventilator support available"); }
+        } else if (selectedFacility === "Blood Bank") {
+          if (h.bloodUnitsAvailable && h.bloodUnitsAvailable !== "None") {
+            score += 30;
+            reasons.push("blood bank available");
+          }
+        } else {
+          const matched = h.specialties.some((s) =>
+            s.toLowerCase().includes(selectedFacility.toLowerCase()),
+          );
+          if (matched) { score += 30; reasons.push(`specializes in ${selectedFacility}`); }
+        }
+      }
+
+      if (isCritical) {
+        if (h.bedsAvailable > 0 && h.icuAvailable > 0 && h.ventilatorsAvailable > 0) {
+          score += 50;
+          reasons.push("full critical care (beds + ICU + ventilators)");
+        } else if (h.icuAvailable > 0 && h.ventilatorsAvailable > 0) {
+          score += 30;
+        }
+      }
+
+      if (filters.area !== "all" && h.area === filters.area) {
+        score += 15;
+        reasons.push(`in preferred area ${h.area}`);
+      }
+
+      return { hospital: h, score, reasons };
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+    const best = scored[0];
+    if (!best || best.score <= -50) return { found: false };
+
+    const facilityText = selectedFacility ? ` with ${selectedFacility} support` : "";
+    const emergencyText =
+      isCritical
+        ? "critical emergency"
+        : filters.emergencyLevel !== "all"
+          ? `${filters.emergencyLevel.toLowerCase()} emergency`
+          : "emergency routing";
+    const topReasons = best.reasons.slice(0, 3).join(", ");
+    const reason = `For ${emergencyText}${facilityText} in ${selectedCity}, ${best.hospital.name} is recommended because it has ${topReasons}.`;
+
+    return { found: true, hospital: best.hospital, score: best.score, reasons: best.reasons, reason };
+  }, [hospitals, selectedCity, filters]);
 
   const cityHasData = cities?.find(
     (c) => c.name.toLowerCase() === (selectedCity || "").toLowerCase()
@@ -246,72 +326,104 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ── AI Routing Engine ──────────────────────────────── */}
-      <Card className="border-primary/20 shadow-sm bg-gradient-to-r from-card to-primary/5">
+      {/* ── AI Recommendation ──────────────────────────────── */}
+      <Card className="border-primary/20 shadow-sm bg-gradient-to-br from-card via-card to-primary/5">
         <CardHeader className="pb-3 border-b border-primary/10">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/20 p-2 rounded-lg shrink-0">
-              <Star className="h-4 w-4 text-primary" />
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="bg-primary/15 p-2 rounded-lg shrink-0">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">AI Recommendation</CardTitle>
+                <CardDescription className="text-xs">
+                  Smart routing based on current filters
+                  {selectedCity && ` · ${selectedCity}`}
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-base">AI Routing Engine</CardTitle>
-              <CardDescription className="text-xs">
-                {selectedCity ? `Best match in ${selectedCity}` : "Select a city for city-specific routing"}
-              </CardDescription>
-            </div>
+            {filters.emergencyLevel !== "all" && (
+              <EmergencyLevelBadge level={filters.emergencyLevel} />
+            )}
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          {recLoading ? (
-            <div className="flex gap-4">
-              <Skeleton className="h-16 flex-1" />
-              <Skeleton className="h-16 w-32" />
+          {!selectedCity ? (
+            <div className="flex items-center gap-3 py-2">
+              <div className="bg-muted h-9 w-9 rounded-full flex items-center justify-center shrink-0">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Select a city to activate</p>
+                <p className="text-xs text-muted-foreground">
+                  Choose a city above to get an AI-powered hospital recommendation.
+                </p>
+              </div>
             </div>
-          ) : recommendation?.found && recommendation.hospital ? (
+          ) : hospitalsLoading ? (
+            <div className="flex gap-4">
+              <Skeleton className="h-20 flex-1" />
+              <Skeleton className="h-20 w-52" />
+            </div>
+          ) : aiRecommendation?.found ? (
             <div className="flex flex-col md:flex-row gap-4">
-              {/* Left: message + reasons */}
+              {/* Left: reason text + bullet points */}
               <div className="flex-1 min-w-0 space-y-3">
-                <div className="bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 px-3 py-2 rounded-lg flex items-start gap-2">
+                <div className="bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 px-3 py-2.5 rounded-lg flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" />
-                  <p className="text-sm font-medium leading-snug">{stripMd(recommendation.message)}</p>
+                  <p className="text-sm font-medium leading-snug">{aiRecommendation.reason}</p>
                 </div>
-                {recommendation.reasons && recommendation.reasons.length > 0 && (
+                {aiRecommendation.reasons.length > 0 && (
                   <ul className="space-y-1">
-                    {recommendation.reasons.slice(0, 4).map((r, i) => (
+                    {aiRecommendation.reasons.slice(0, 5).map((r, i) => (
                       <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                        <span className="leading-snug">{r}</span>
+                        <span className="leading-snug capitalize">{r}</span>
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
 
-              {/* Right: hospital mini-card + button */}
-              <div className="md:w-56 shrink-0 flex flex-col gap-2">
-                <div className="border rounded-lg bg-background p-3">
-                  <p className="font-semibold text-sm leading-tight">{recommendation.hospital.name}</p>
-                  <p className="text-xs text-muted-foreground flex items-center mt-0.5">
-                    <MapPin className="h-3 w-3 mr-1 shrink-0" />
-                    {recommendation.hospital.area}, {recommendation.hospital.city}
-                  </p>
-                  <div className="flex gap-3 mt-2 text-center">
-                    <div className="flex-1">
-                      <p className="text-[10px] text-muted-foreground uppercase">ICU</p>
-                      <p className="font-bold text-purple-600 dark:text-purple-400">{recommendation.hospital.icuAvailable}</p>
-                    </div>
-                    <div className="flex-1 border-x">
-                      <p className="text-[10px] text-muted-foreground uppercase">Vent</p>
-                      <p className="font-bold text-cyan-600 dark:text-cyan-400">{recommendation.hospital.ventilatorsAvailable}</p>
-                    </div>
-                    <div className="flex-1">
+              {/* Right: hospital detail card + call button */}
+              <div className="md:w-60 shrink-0 flex flex-col gap-2">
+                <div className="border rounded-lg bg-background p-3 space-y-2">
+                  <div>
+                    <p className="font-bold text-sm leading-tight">{aiRecommendation.hospital.name}</p>
+                    <p className="text-xs text-muted-foreground flex items-center mt-0.5">
+                      <MapPin className="h-3 w-3 mr-1 shrink-0" />
+                      {aiRecommendation.hospital.area}, {aiRecommendation.hospital.city}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={aiRecommendation.hospital.status} />
+                    {aiRecommendation.hospital.emergencyLevel && (
+                      <EmergencyLevelBadge level={aiRecommendation.hospital.emergencyLevel} />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-1 bg-muted/40 rounded-md p-2 text-center">
+                    <div>
                       <p className="text-[10px] text-muted-foreground uppercase">Beds</p>
-                      <p className="font-bold">{recommendation.hospital.bedsAvailable}</p>
+                      <p className="font-bold text-sm">{aiRecommendation.hospital.bedsAvailable}</p>
+                    </div>
+                    <div className="border-x border-border/60">
+                      <p className="text-[10px] text-muted-foreground uppercase">ICU</p>
+                      <p className="font-bold text-sm text-purple-600 dark:text-purple-400">{aiRecommendation.hospital.icuAvailable}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase">Vent</p>
+                      <p className="font-bold text-sm text-cyan-600 dark:text-cyan-400">{aiRecommendation.hospital.ventilatorsAvailable}</p>
                     </div>
                   </div>
+                  {aiRecommendation.hospital.contactNumber && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Phone className="h-3 w-3 shrink-0" />
+                      {aiRecommendation.hospital.contactNumber}
+                    </p>
+                  )}
                 </div>
                 <Button size="sm" className="w-full" asChild>
-                  <a href={`tel:${recommendation.hospital.contactNumber}`}>
+                  <a href={`tel:${aiRecommendation.hospital.contactNumber}`}>
                     <Phone className="h-4 w-4 mr-2" />
                     Call Hospital
                   </a>
@@ -319,21 +431,15 @@ export default function Dashboard() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 py-1">
               <div className="flex items-center gap-3 flex-1">
-                <div className="bg-muted h-10 w-10 rounded-full flex items-center justify-center shrink-0">
-                  <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+                <div className="bg-muted h-9 w-9 rounded-full flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">
-                    {recommendation?.found === false ? "No suitable hospital found" : "Ready to route"}
-                  </p>
+                  <p className="font-semibold text-sm">No suitable hospital found</p>
                   <p className="text-xs text-muted-foreground">
-                    {recommendation?.message
-                      ? stripMd(recommendation.message)
-                      : selectedCity
-                        ? `Select emergency level and facility to get a recommendation for ${selectedCity}.`
-                        : "Select a city and filters to activate the AI routing engine."}
+                    No suitable hospital found for the selected filters. Try expanding the area/facility or contact the emergency helpline.
                   </p>
                 </div>
               </div>

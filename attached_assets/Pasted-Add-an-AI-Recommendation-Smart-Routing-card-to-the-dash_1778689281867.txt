@@ -1,0 +1,88 @@
+Add an AI Recommendation / Smart Routing card to the dashboard.
+
+The app already has:
+- city-based hospital data
+- hospital cards
+- city selector
+- area filter
+- facility filter
+- status filter
+- emergency level filter
+- emergency contacts
+- update/add hospital functionality
+- dark mode
+
+Add a normal dashboard card called “AI Recommendation” or “Smart Routing Suggestion”.
+
+Important layout requirements:
+1. Do not make it floating, fixed, sticky, absolute, or popup.
+2. It must scroll normally with the page.
+3. Place it below the stats/emergency contacts section and above the hospital grid.
+4. On mobile, it should stack normally like other cards.
+5. It should not overlap hospital cards, emergency contacts, filters, footer, or buttons.
+6. It must work properly in dark mode.
+
+Recommendation should update whenever any of these change:
+- selected city
+- selected area
+- selected facility
+- selected status
+- emergency level
+- search query
+- hospital availability data
+
+Recommendation logic:
+1. Only consider hospitals from the selected city.
+2. Apply the current filters before recommending:
+   - area
+   - facility
+   - status
+   - search query
+3. Exclude Full hospitals if any Available or Limited hospital exists in the filtered result.
+4. For Critical emergency:
+   - prioritize hospitals with bedsAvailable > 0
+   - icuBeds > 0
+   - ventilators > 0
+   - status Available or Limited
+5. If selected facility is ICU:
+   - prioritize hospitals with icuBeds > 0
+6. If selected facility is Ventilator:
+   - prioritize hospitals with ventilators > 0
+7. If selected facility is Blood Bank:
+   - prioritize hospitals with valid blood availability that is not empty and not None
+8. For other facilities:
+   - match hospital specialties case-insensitively
+9. Choose the highest scoring hospital.
+
+Scoring idea:
+- Available status: +40
+- Limited status: +20
+- Full status: -100
+- bedsAvailable: +1 per bed, max +30
+- icuBeds: +5 per ICU bed
+- ventilators: +7 per ventilator
+- selected facility match: +30
+- Critical emergency with ICU > 0 and ventilators > 0: +50
+- same selected area: +15 if area filter is selected
+
+The card should display:
+- Recommended hospital name
+- Area and city
+- Status
+- Beds available
+- ICU beds
+- Ventilators
+- Contact number
+- Reason for recommendation
+- “Call Hospital” button using tel: link
+
+Example reason:
+“For critical ventilator support in Bengaluru, Manipal Hospital is recommended because it has available beds, ICU capacity, and ventilator support.”
+
+If no suitable hospital is found, show:
+“No suitable hospital found for the selected filters. Try expanding the area/facility or contact the emergency helpline.”
+
+Also:
+- Do not show markdown symbols like **hospital name** in the UI.
+- Keep the card compact, professional, and hackathon-demo friendly.
+- Make sure the hospital grid still works normally below it.
