@@ -1,0 +1,58 @@
+Fix the Facility filter and AI Recommendation logic for resource-based facilities.
+
+Problem:
+The app has Bengaluru hospitals with ventilators and ICU values, but when I select Facility = Ventilator and Emergency Level = Critical, it does not work correctly. The data is already there, but the logic is not detecting ventilator availability properly.
+
+Update the facility matching logic so it checks both specialties and numeric resource fields.
+
+Facility matching rules:
+
+1. If selected facility is "ICU":
+   A hospital matches if:
+   - hospital.icuBeds > 0
+   OR specialties includes "ICU"
+
+2. If selected facility is "Ventilator":
+   A hospital matches if:
+   - hospital.ventilators > 0
+   OR specialties includes "Ventilator"
+
+3. If selected facility is "Blood Bank":
+   A hospital matches if:
+   - bloodAvailability is not empty
+   - bloodAvailability is not "None"
+   - bloodAvailability is not "Limited" only if the app treats limited as unavailable
+   OR specialties includes "Blood Bank"
+
+4. If selected facility is "General Beds":
+   A hospital matches if:
+   - bedsAvailable > 0
+
+5. For other facilities like Trauma Care, Kidney Care, Liver Care, Cardiology, Neurology, Emergency Ward, Operation Theatre:
+   A hospital matches if specialties includes that facility.
+
+Important:
+- Facility matching should be case-insensitive.
+- It should handle values like "ventilator", "Ventilator", "VENT", "Ventilators".
+- Do not rely only on specialties for ICU and Ventilator.
+- Use numeric fields for ICU and ventilators.
+
+Also fix AI Recommendation:
+- Recommendation scoring should use the same facility matching function.
+- For Critical emergency, only recommend hospitals with:
+  - status not Full
+  - bedsAvailable > 0
+  - icuBeds > 0
+  - ventilators > 0
+- Full hospitals should be heavily penalized and never selected if any Available/Limited hospital exists.
+- If selected facility is Ventilator, hospitals with ventilators > 0 should score higher.
+- If selected facility is ICU, hospitals with ICU > 0 should score higher.
+
+Expected test:
+City = Bengaluru
+Facility = Ventilator
+Emergency Level = Critical
+
+The dashboard should show hospitals like Manipal Hospital, Whitefield Care Hospital, Narayana Health, or Fortis Hospital Bangalore if they have ventilators > 0.
+
+The AI Recommendation should choose the best hospital based on Available/Limited status, ICU count, ventilator count, and beds.

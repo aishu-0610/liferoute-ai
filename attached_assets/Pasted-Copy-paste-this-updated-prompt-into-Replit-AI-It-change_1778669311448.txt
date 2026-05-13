@@ -1,0 +1,442 @@
+Copy-paste this **updated prompt** into Replit AI. It changes LifeRoute AI from **Madurai-only** to a **multi-city emergency hospital dashboard** where users enter a city and the dashboard adapts to that city, including city/state-based emergency contacts.
+
+---
+
+# Updated Replit Prompt for LifeRoute AI
+
+Modify the existing **LifeRoute AI** project.
+
+Currently, the app works only for Madurai. Update it so that it works for **any selected/entered city** in the MVP.
+
+The app should become a **multi-city centralized emergency hospital availability dashboard**.
+
+Users should be able to enter or select a city, and the dashboard should show hospitals, filters, recommendations, and emergency contacts based on that city.
+
+---
+
+## Main Change Required
+
+Instead of hardcoding the app only for Madurai:
+
+* Add a **city selector/search input**
+* Load hospital data based on the selected city
+* Show emergency contacts based on the selected city/state
+* Update dashboard title based on the selected city
+* Make AI recommendation city-aware
+* Make filters city-aware
+* Make hospital update panel city-aware
+
+Example:
+
+If user selects **Madurai**, show Madurai hospitals and Tamil Nadu emergency contacts.
+
+If user selects **Chennai**, show Chennai hospitals and Tamil Nadu emergency contacts.
+
+If user selects **Bengaluru**, show Bengaluru hospitals and Karnataka emergency contacts.
+
+If user selects **Mumbai**, show Mumbai hospitals and Maharashtra emergency contacts.
+
+If user selects **Delhi**, show Delhi hospitals and Delhi emergency contacts.
+
+---
+
+## Important Concept
+
+The user should first choose or type a city.
+
+Then the website should show:
+
+> Emergency hospital availability for that selected city.
+
+Do not show only Madurai by default unless no city is selected.
+
+---
+
+## City Selection Requirements
+
+Add a city selector near the top of the landing page and dashboard.
+
+It should allow users to select from sample cities:
+
+* Madurai
+* Chennai
+* Bengaluru
+* Mumbai
+* Delhi
+* Hyderabad
+* Kochi
+* Coimbatore
+* Pune
+* Kolkata
+
+Also allow manual city input for future expansion.
+
+For MVP, if the city is not in the sample data, show a friendly message:
+
+> “We don’t have live sample hospital data for this city yet. Please try another city or add hospital data through the update panel.”
+
+---
+
+## Hospital Data Structure
+
+Update the hospital data model to include:
+
+* id
+* hospitalName
+* city
+* state
+* area
+* status
+* bedsAvailable
+* icuBeds
+* ventilators
+* bloodAvailability
+* specialties
+* contactNumber
+* emergencyContact
+* lastUpdated
+
+Hospitals must be grouped by city.
+
+---
+
+## Sample City Data
+
+Add sample hospitals for at least these cities:
+
+### Madurai, Tamil Nadu
+
+Use the existing Madurai hospitals.
+
+### Chennai, Tamil Nadu
+
+Add 4–5 sample hospitals in areas like:
+
+* Anna Nagar
+* T. Nagar
+* Adyar
+* Velachery
+* Porur
+
+### Bengaluru, Karnataka
+
+Add 4–5 sample hospitals in areas like:
+
+* Indiranagar
+* Whitefield
+* Koramangala
+* Jayanagar
+* Electronic City
+
+### Mumbai, Maharashtra
+
+Add 4–5 sample hospitals in areas like:
+
+* Andheri
+* Bandra
+* Dadar
+* Powai
+* Navi Mumbai
+
+### Delhi
+
+Add 4–5 sample hospitals in areas like:
+
+* Connaught Place
+* Rohini
+* Dwarka
+* Saket
+* Karol Bagh
+
+For other cities in the selector, it is okay to show placeholder/no data message unless sample data is added.
+
+Use realistic but fictional hospital names unless using verified public data.
+
+---
+
+## Emergency Contact Logic
+
+Create a city/state-based emergency contact section.
+
+The emergency contact should change based on selected city/state.
+
+For India MVP, include:
+
+### National emergency numbers
+
+* Emergency Response Support System: 112
+* Ambulance: 108
+* Police: 100
+* Fire: 101
+* Women Helpline: 1091
+* Child Helpline: 1098
+
+### State/city-specific contact object
+
+Create an emergencyContacts data object like:
+
+```js
+const emergencyContacts = {
+  "Tamil Nadu": {
+    ambulance: "108",
+    police: "100",
+    fire: "101",
+    disaster: "1070",
+    healthHelpline: "104"
+  },
+  "Karnataka": {
+    ambulance: "108",
+    police: "100",
+    fire: "101",
+    disaster: "1070",
+    healthHelpline: "104"
+  },
+  "Maharashtra": {
+    ambulance: "108",
+    police: "100",
+    fire: "101",
+    disaster: "1070",
+    healthHelpline: "104"
+  },
+  "Delhi": {
+    ambulance: "102 / 108",
+    police: "100",
+    fire: "101",
+    disaster: "1077",
+    healthHelpline: "1031"
+  },
+  "Telangana": {
+    ambulance: "108",
+    police: "100",
+    fire: "101",
+    disaster: "1070",
+    healthHelpline: "104"
+  },
+  "Kerala": {
+    ambulance: "108",
+    police: "100",
+    fire: "101",
+    disaster: "1070",
+    healthHelpline: "104"
+  }
+};
+```
+
+Display these contacts in a visible **Emergency Contacts** card.
+
+The card should show:
+
+* Selected city
+* State
+* Ambulance number
+* Police number
+* Fire number
+* Health helpline
+* Disaster helpline
+* National emergency number 112
+
+If city/state contact is not available, show national numbers.
+
+---
+
+## Dashboard Changes
+
+The dashboard heading should change dynamically.
+
+Example:
+
+> Emergency Hospital Dashboard — Madurai
+
+or
+
+> Emergency Hospital Dashboard — Bengaluru
+
+The stats cards should also update based on selected city:
+
+* Total hospitals in selected city
+* Available hospitals
+* ICU beds available
+* Ventilators available
+* Total beds available
+
+Do not calculate stats across all cities. Calculate only for the selected city.
+
+---
+
+## Filter Changes
+
+Filters should work only within the selected city.
+
+User can filter by:
+
+* Area
+* Facility
+* Status
+* Emergency level
+* Hospital name/search
+
+Example:
+
+If city is Bengaluru and facility is ICU, show only Bengaluru hospitals with ICU.
+
+---
+
+## AI Recommendation Changes
+
+The AI recommendation should be based only on hospitals in the selected city.
+
+It should consider:
+
+* Selected city
+* Selected area
+* Selected facility
+* Emergency level
+* Status
+* Beds available
+* ICU beds
+* Ventilators
+
+Example recommendation:
+
+> “For critical ICU support in Bengaluru, Whitefield Care Hospital is currently the best option because it has ICU beds, ventilator support, and available emergency capacity.”
+
+If no hospital is available in that city:
+
+> “No suitable hospital found in the selected city. Try another facility, area, or contact the emergency helpline shown above.”
+
+---
+
+## Hospital Update Panel Changes
+
+The update panel should allow staff to:
+
+* Select city
+* Select hospital from that city
+* Update availability
+
+Also allow adding a new hospital for a city.
+
+Add a form section:
+
+### Add New Hospital
+
+Fields:
+
+* Hospital name
+* City
+* State
+* Area
+* Status
+* Beds available
+* ICU beds
+* Ventilators
+* Blood availability
+* Specialties
+* Contact number
+
+When a new hospital is added, it should appear in that city’s dashboard.
+
+For MVP, in-memory update is okay.
+
+---
+
+## Landing Page Changes
+
+Update the landing page so it does not sound Madurai-only.
+
+Use this positioning:
+
+> LifeRoute AI helps users find available emergency hospital resources across cities by showing city-based hospital availability, emergency contacts, and smart recommendations in one centralized dashboard.
+
+Add a city input/selector in the hero section:
+
+Placeholder:
+
+> Enter your city to find emergency hospitals
+
+Button:
+
+> Open City Dashboard
+
+---
+
+## UI Requirements
+
+Add:
+
+* City selector at top
+* Emergency Contacts card
+* City-based stats cards
+* Empty state for unsupported cities
+* Clear selected city label
+* Responsive design
+* Dark mode support for all new sections
+
+Emergency Contacts card should be visually important but not scary.
+
+Use colors:
+
+* Red for emergency contact buttons
+* Blue/green for healthcare dashboard
+* Yellow for limited availability
+* Green for available
+* Red for full
+
+---
+
+## Backend/API Changes
+
+Update backend routes if needed.
+
+Recommended routes:
+
+* GET /api/cities
+* GET /api/hospitals?city=Madurai
+* GET /api/emergency-contacts?city=Madurai
+* PUT /api/hospitals/:id
+* POST /api/hospitals
+
+If using in-memory data, keep it simple.
+
+---
+
+## Important Rules
+
+Do not remove existing features.
+
+Keep:
+
+* Landing page
+* Central dashboard
+* Search
+* Filters
+* AI recommendation
+* Hospital update panel
+* Dark mode
+* Hospital cards
+* Stats cards
+
+But make everything city-based.
+
+---
+
+## Final Output Expected
+
+After modification, the app should allow this flow:
+
+1. User opens LifeRoute AI
+2. User enters/selects a city
+3. Dashboard loads hospitals for that city
+4. Emergency contacts update based on city/state
+5. User filters by area/facility/status
+6. AI recommendation suggests best hospital in that city
+7. Hospital staff can update or add hospitals for that city
+8. App works smoothly in light and dark mode
+
+---
+
+## Final Reminder
+
+The app should no longer be Madurai-only.
+
+It should be a **multi-city emergency hospital availability platform** where hospital data, filters, stats, recommendations, and emergency contacts are based on the selected city.
