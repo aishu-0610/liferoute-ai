@@ -1,0 +1,427 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: LifeRoute AI API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: hospitals
+    description: Hospital operations
+  - name: cities
+    description: City operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /cities:
+    get:
+      operationId: getCities
+      tags: [cities]
+      summary: Get all supported cities
+      responses:
+        "200":
+          description: List of cities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/City"
+
+  /emergency-contacts:
+    get:
+      operationId: getEmergencyContacts
+      tags: [cities]
+      summary: Get emergency contacts for a city
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Emergency contacts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmergencyContacts"
+
+  /hospitals:
+    get:
+      operationId: getHospitals
+      tags: [hospitals]
+      summary: Get hospitals filtered by city and other criteria
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: facility
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: emergencyLevel
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of hospitals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Hospital"
+
+    post:
+      operationId: addHospital
+      tags: [hospitals]
+      summary: Add a new hospital
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewHospital"
+      responses:
+        "201":
+          description: Created hospital
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hospital"
+
+  /hospitals/stats:
+    get:
+      operationId: getHospitalStats
+      tags: [hospitals]
+      summary: Get aggregate stats for a city
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HospitalStats"
+
+  /hospitals/recommend:
+    get:
+      operationId: getRecommendation
+      tags: [hospitals]
+      summary: Get AI recommendation
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: area
+          in: query
+          schema:
+            type: string
+        - name: facility
+          in: query
+          schema:
+            type: string
+        - name: emergencyLevel
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recommendation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Recommendation"
+
+  /hospitals/{id}:
+    get:
+      operationId: getHospital
+      tags: [hospitals]
+      summary: Get a single hospital
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Hospital details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hospital"
+        "404":
+          description: Not found
+
+    put:
+      operationId: updateHospital
+      tags: [hospitals]
+      summary: Update hospital availability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HospitalUpdate"
+      responses:
+        "200":
+          description: Updated hospital
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Hospital"
+        "404":
+          description: Not found
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    City:
+      type: object
+      required:
+        - name
+        - state
+        - hasData
+      properties:
+        name:
+          type: string
+        state:
+          type: string
+        hasData:
+          type: boolean
+
+    EmergencyContacts:
+      type: object
+      required:
+        - city
+        - state
+        - national
+        - ambulance
+        - police
+        - fire
+        - healthHelpline
+        - disaster
+      properties:
+        city:
+          type: string
+        state:
+          type: string
+        national:
+          type: string
+        ambulance:
+          type: string
+        police:
+          type: string
+        fire:
+          type: string
+        healthHelpline:
+          type: string
+        disaster:
+          type: string
+
+    Hospital:
+      type: object
+      required:
+        - id
+        - name
+        - city
+        - state
+        - area
+        - status
+        - bedsAvailable
+        - icuAvailable
+        - ventilatorsAvailable
+        - bloodUnitsAvailable
+        - specialties
+        - contactNumber
+        - lastUpdated
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        area:
+          type: string
+        status:
+          type: string
+          enum: [Available, Limited, Full]
+        emergencyLevel:
+          type: ["string", "null"]
+          enum: [Low, Medium, High, Critical, null]
+        bedsAvailable:
+          type: integer
+        icuAvailable:
+          type: integer
+        ventilatorsAvailable:
+          type: integer
+        bloodUnitsAvailable:
+          type: ["string", "null"]
+        specialties:
+          type: array
+          items:
+            type: string
+        contactNumber:
+          type: string
+        lastUpdated:
+          type: string
+
+    NewHospital:
+      type: object
+      required:
+        - name
+        - city
+        - state
+        - area
+        - status
+        - bedsAvailable
+        - icuAvailable
+        - ventilatorsAvailable
+        - specialties
+        - contactNumber
+      properties:
+        name:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        area:
+          type: string
+        status:
+          type: string
+          enum: [Available, Limited, Full]
+        emergencyLevel:
+          type: ["string", "null"]
+          enum: [Low, Medium, High, Critical, null]
+        bedsAvailable:
+          type: integer
+        icuAvailable:
+          type: integer
+        ventilatorsAvailable:
+          type: integer
+        bloodUnitsAvailable:
+          type: ["string", "null"]
+        specialties:
+          type: array
+          items:
+            type: string
+        contactNumber:
+          type: string
+
+    HospitalUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [Available, Limited, Full]
+        emergencyLevel:
+          type: ["string", "null"]
+          enum: [Low, Medium, High, Critical, null]
+        bedsAvailable:
+          type: integer
+        icuAvailable:
+          type: integer
+        ventilatorsAvailable:
+          type: integer
+        bloodUnitsAvailable:
+          type: ["string", "null"]
+        specialties:
+          type: array
+          items:
+            type: string
+        contactNumber:
+          type: string
+
+    HospitalStats:
+      type: object
+      required:
+        - totalHospitals
+        - availableHospitals
+        - limitedHospitals
+        - fullHospitals
+        - totalIcuBeds
+        - totalVentilators
+        - totalBeds
+      properties:
+        totalHospitals:
+          type: integer
+        availableHospitals:
+          type: integer
+        limitedHospitals:
+          type: integer
+        fullHospitals:
+          type: integer
+        totalIcuBeds:
+          type: integer
+        totalVentilators:
+          type: integer
+        totalBeds:
+          type: integer
+
+    Recommendation:
+      type: object
+      required:
+        - found
+        - message
+      properties:
+        found:
+          type: boolean
+        message:
+          type: string
+        hospital:
+          $ref: "#/components/schemas/Hospital"
+        reasons:
+          type: array
+          items:
+            type: string
