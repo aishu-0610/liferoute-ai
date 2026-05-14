@@ -125,6 +125,3 @@ Built for **BluePrint 2026** under the **Healthcare** domain.
 
 ---
 
-## Team
-
-Add your team member names here.
