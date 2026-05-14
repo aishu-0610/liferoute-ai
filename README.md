@@ -193,6 +193,16 @@ Open the local URL shown in the terminal.
 
 ---
 
+## Important Disclaimer
+
+LifeRoute AI is a student hackathon prototype built for demonstration purposes only.
+
+It is not a real emergency service, medical advice platform, hospital booking system, ambulance dispatch system, or official hospital availability source. All hospital data, availability values, and hospital phone numbers shown in the demo are sample data.
+
+Do not use this project to make real medical or emergency decisions. In a real emergency, call official emergency services such as 112 or 108, or contact a verified hospital directly.
+
+---
+
 ## Hackathon Submission
 
 This project was built for **BluePrint 2026**.
