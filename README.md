@@ -10,7 +10,7 @@ Built for **BluePrint 2026** under the **Healthcare** domain.
 
 ## Live Demo
 
-https://7c43efdc-b0bd-4822-befd-e0b2dab4a819-00-3scy52kgdtl7u.pike.replit.dev
+https://f08c2eb2-295a-464e-8c87-934bb0968ffb-00-2mescm99lw31m.sisko.replit.dev/
 
 ---
 
